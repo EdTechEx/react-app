@@ -1,0 +1,9 @@
+.searchBar {
+  display: inline-flex;
+  gap: 16px;
+}
+
+.inputWrapper{
+  width: 400px;
+  
+}

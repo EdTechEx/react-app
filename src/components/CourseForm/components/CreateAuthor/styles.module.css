@@ -1,0 +1,10 @@
+.newAuthorContainer {
+	display: flex;
+	align-items: flex-end;
+	gap: 20px;
+	margin-bottom: 64px;
+}
+
+.newAuthorContainer button {
+	flex-shrink: 0;
+}

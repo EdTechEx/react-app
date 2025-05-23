@@ -1,0 +1,11 @@
+.panel {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 0;
+}
+
+.coursesList{
+  margin-top: 33px;
+  padding: 0;
+  list-style: none;
+}
