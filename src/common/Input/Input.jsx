@@ -18,7 +18,7 @@ export const Input = ({
     {labelText}
     <input
       name={name}
-      value={value || undefined}
+      value={value}
       onChange={onChange}
       placeholder={placeholderText}
       className={styles.input}

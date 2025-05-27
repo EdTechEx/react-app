@@ -31,7 +31,7 @@ const authorsList = [
 ];
 
 describe("CourseInfo", () => {
-  test("should renders correct title (find correct course from coursesList based on showCourseId prop) ", () => {
+  test("should renders correct title (find correct course from coursesList based on showCourseId prop)", () => {
     render(
       <CourseInfo
         coursesList={mockedCoursesList}

@@ -7,7 +7,7 @@ describe("services", () => {
       jest.resetAllMocks();
     });
 
-    it('should create new user on createUser (call fetch with path - "http://localhost:4000/register" method - "POST", body - {name, password, email}, headers - "Content-Type": "application/json")', async () => {
+    it('should create new user on createUser (call fetch with path - "http://localhost:4000/registration" method - "POST", body - {name, password, email}, headers - "Content-Type": "application/json")', async () => {
       const mockUser = { name: "John", password: "pass" };
       const mockResponse = {
         ok: true,

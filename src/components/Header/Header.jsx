@@ -1,5 +1,4 @@
 import React from "react";
-
 import styles from "./styles.module.css";
 import { Logo } from "./components";
 import { Button } from "../../common";
@@ -10,6 +9,8 @@ import {
   getUserTokenSelector,
 } from "../../store/selectors";
 import { removeUserData } from "../../store/slices/userSlice";
+import { logoutThunk } from "../../store/thunks/userThunk";
+
 // import { getUserTokenSelector } from "../../store/selectors";
 
 // Module 1:
@@ -45,14 +46,12 @@ export const Header = () => {
   const token = useSelector(getUserTokenSelector);
   const name = useSelector(getUserNameSelector);
   const dispatch = useDispatch();
-
   const navigate = useNavigate();
 
   const handleClick = () => {
-    localStorage.removeItem("token");
-    dispatch(removeUserData());
-
-    navigate("/login");
+    dispatch(logoutThunk()).then(() => {
+      navigate("/login");
+    });
   };
 
   return (

@@ -36,23 +36,46 @@
 //   ** CourseCard should display created date in the correct format.
 
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { getCourseDuration, formatCreationDate } from "../../../../helpers";
-
 import deleteIcon from "../../../../assets/deleteButtonIcon.svg";
 import editIcon from "../../../../assets/editButtonIcon.svg";
-
 import styles from "./styles.module.css";
 import { Button } from "../../../../common";
-import { useSelector } from "react-redux";
-import { getAuthorsSelector } from "../../../../store/selectors";
+import {
+  getAuthorsSelector,
+  getUserRoleSelector,
+} from "../../../../store/selectors";
+import { deleteCourseThunk } from "../../../../store/thunks/coursesThunk";
 
-export const CourseCard = ({ course, handleShowCourse, handleDelete }) => {
+export const CourseCard = ({ course }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const authorsList = useSelector(getAuthorsSelector);
+  const role = useSelector(getUserRoleSelector);
+
   const { id, title, description, duration, creationDate, authors } = course;
-  const authorsListView = authors
-    .map((id) => authorsList.find((obj) => obj.id === id).name)
+
+  const authorsListView = (authors || [])
+    .map(
+      (authorId) => authorsList.find((author) => author.id === authorId)?.name
+    )
+    .filter(Boolean)
     .join(", ");
+
+  const handleDelete = () => {
+    dispatch(deleteCourseThunk(id));
+  };
+
+  const handleShowCourse = () => {
+    navigate(`/courses/${id}`);
+  };
+
+  const handleEditCourse = () => {
+    navigate(`/courses/update/${id}`);
+  };
 
   return (
     <div className={styles.cardContainer} data-testid="courseCard">
@@ -63,7 +86,7 @@ export const CourseCard = ({ course, handleShowCourse, handleDelete }) => {
       <div className={styles.cardDetails}>
         <p>
           <b>Authors: </b>
-          {authorsListView}
+          <span>{authorsListView}</span>
         </p>
         <p>
           <b>Duration:</b>
@@ -74,20 +97,22 @@ export const CourseCard = ({ course, handleShowCourse, handleDelete }) => {
           <span>{formatCreationDate(creationDate)}</span>
         </p>
         <div className={styles.buttonsContainer}>
-          <Button
-            buttonText="show course"
-            handleClick={() => handleShowCourse(id)}
-          ></Button>
-          <Button
-            buttonText={<img alt="delete" src={deleteIcon}></img>}
-            handleClick={() => handleDelete(id)}
-            data-testid="deleteCourse"
-          ></Button>
-          <Button
-            buttonText={<img alt="edit" src={editIcon}></img>}
-            handleClick={() => {}}
-            data-testid="updateCourse"
-          ></Button>
+          <Button buttonText="Show course" handleClick={handleShowCourse} />
+
+          {role === "admin" && (
+            <>
+              <Button
+                buttonText={<img alt="delete" src={deleteIcon} />}
+                handleClick={handleDelete}
+                data-testid="deleteCourse"
+              />
+              <Button
+                buttonText={<img alt="edit" src={editIcon} />}
+                handleClick={handleEditCourse}
+                data-testid="updateCourse"
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

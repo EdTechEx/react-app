@@ -18,12 +18,11 @@
 // // Module 4.
 // // * use 'setUserData' from 'userSlice.js' to add user's data to store. (DO NOT use 'user/me' [GET] request)
 
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import { Button, Input } from "../../common";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../../services";
+import { login, getCurrentUser } from "../../services";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserTokenSelector } from "../../store/selectors";
 import { setUserData } from "../../store/slices/userSlice";
@@ -31,23 +30,6 @@ import { setUserData } from "../../store/slices/userSlice";
 const defaultState = {
   email: "",
   password: "",
-};
-
-const parseErrors = (errorsArray) => {
-  const errorFields = {
-    email: "",
-    password: "",
-  };
-
-  errorsArray.forEach((error) => {
-    if (error.includes("'email'")) {
-      errorFields.email = error;
-    } else if (error.includes("'password'")) {
-      errorFields.password = error;
-    }
-  });
-
-  return errorFields;
 };
 
 export const Login = () => {
@@ -58,51 +40,74 @@ export const Login = () => {
   const token = useSelector(getUserTokenSelector);
 
   useEffect(() => {
+    console.log("Checking token in useEffect:", token);
     if (token) {
       navigate("/courses");
     }
-  }, [navigate, token]);
+  }, [token, navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    }
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    }
+    return newErrors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors(defaultState);
+    console.log("handleSubmit called");
 
-    let newErrors = { ...defaultState };
-    Object.keys(formData).forEach((field) => {
-      if (!formData[field]) {
-        newErrors[field] = `${field} is required`;
-      }
-    });
+    const validationErrors = validate();
+    setErrors(validationErrors);
 
-    setErrors(newErrors);
-    if (Object.values(newErrors).some((error) => error)) return;
+    if (Object.keys(validationErrors).length > 0) {
+      console.log("Validation failed:", validationErrors);
+      return;
+    }
 
     try {
+      console.log("Sending login request with data:", formData);
       const response = await login(formData);
+      console.log("Login response:", response);
 
       if (response.errors) {
-        setErrors(parseErrors(response.errors || []));
+        const errorObj = {};
+        response.errors.forEach((err) => {
+          if (err.toLowerCase().includes("email")) errorObj.email = err;
+          if (err.toLowerCase().includes("password")) errorObj.password = err;
+        });
+        setErrors(errorObj);
         return;
       }
 
-      if (response.successful) {
+      if (response.result) {
         localStorage.setItem("token", response.result);
 
-        dispatch(setUserData({ ...response.user, token: response.result }));
+        const userResponse = await getCurrentUser();
+        const user = userResponse.result;
+        dispatch(setUserData({ ...user, token: response.result }));
 
         navigate("/courses");
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Login error:", error);
     }
-  };
-
-  const handleChange = (e) => {
-    console.log(e);
-
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    console.log(formData);
   };
 
   return (
@@ -121,6 +126,7 @@ export const Login = () => {
           <Input
             labelText="Password"
             name="password"
+            type="password"
             value={formData.password}
             onChange={(e) => handleChange(e)}
             placeholderText="Input text"

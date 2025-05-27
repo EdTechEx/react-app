@@ -55,8 +55,7 @@ import { getCourseDuration, getCurrentDate } from "../../helpers";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getAuthorsSelector } from "../../store/selectors";
-import { saveCourse } from "../../store/slices/coursesSlice";
-// import { saveAuthor } from "../../store/slices/authorsSlice";
+import { createCourseThunk } from "../../store/thunks/coursesThunk";
 
 const filterById = (courseAuthors, authors) => {
   const ids = new Set(courseAuthors.map((item) => item.id));
@@ -77,20 +76,19 @@ export const CourseForm = ({ action }) => {
   const [formError, setFormError] = useState({});
   const authorsList = useSelector(getAuthorsSelector);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [authors, setAuthors] = useState(() =>
     filterById(courseAuthors, authorsList)
   );
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     setAuthors(filterById(courseAuthors, authorsList));
   }, [authorsList, courseAuthors]);
 
-  const handleCreateCourse = (e) => {
+  const handleCreateCourse = async (e) => {
     e.preventDefault();
-
+    console.log("Form submitted");
     setFormError({});
 
     let formErrors = {};
@@ -98,15 +96,12 @@ export const CourseForm = ({ action }) => {
     if (!courseData.title.trim()) {
       formErrors.title = "Title is required";
     }
-
     if (!courseData.description.trim()) {
       formErrors.description = "Description is required";
     }
-
     if (courseData.duration <= 0) {
       formErrors.duration = "Duration is required";
     }
-
     if (courseAuthors.length === 0) {
       formErrors.authors = "At least one author is required";
     }
@@ -116,16 +111,20 @@ export const CourseForm = ({ action }) => {
       return;
     }
 
-    dispatch(
-      saveCourse({
-        ...courseData,
-        authors: courseAuthors.map((author) => author.id),
-        id: String(Date.now()),
-        creationDate: getCurrentDate(),
-      })
-    );
+    try {
+      const { id, ...courseWithoutId } = courseData;
 
-    navigate("/courses");
+      const newCourse = {
+      ...courseWithoutId,
+      authors: courseAuthors.map((a) => a.id),
+    };
+
+      await dispatch(createCourseThunk(newCourse)).unwrap();
+
+      navigate("/courses");
+    } catch (error) {
+      alert(error || "Failed to create course");
+    }
   };
 
   const filterAuthors = (author) => {
@@ -171,7 +170,8 @@ export const CourseForm = ({ action }) => {
     <div className={styles.container}>
       <h2>{action === "create" ? "Create page" : "Course edit"}</h2>
 
-      <form>
+      <form onSubmit={handleCreateCourse}>
+        {" "}
         <Input
           labelText="Title"
           name="title"
@@ -189,7 +189,7 @@ export const CourseForm = ({ action }) => {
             placeholder="Input text"
             onChange={(e) => handleDescriptionChange(e.target.value)}
             value={courseData.description}
-            error={formError.description}
+            // error={formError.description}
           />
           {formError.description && (
             <span className={styles.error}>{formError.description}</span>
@@ -246,16 +246,15 @@ export const CourseForm = ({ action }) => {
             )}
           </div>
         </div>
+        <div className={styles.buttonsContainer}>
+          <Button buttonText="CANCEL" handleClick={() => navigate("/")} />
+          <Button
+            buttonText={`${action} course`}
+            data-testid="createCourseButton"
+            type="submit"
+          />
+        </div>
       </form>
-
-      <div className={styles.buttonsContainer}>
-        <Button buttonText="CANCEL" />
-        <Button
-          buttonText={`${action} course`}
-          data-testid="createCourseButton"
-          handleClick={handleCreateCourse}
-        />
-      </div>
     </div>
   );
 };

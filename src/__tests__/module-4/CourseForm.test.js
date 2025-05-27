@@ -52,7 +52,7 @@ describe("CourseForm", () => {
     });
   });
 
-  it('should dispatch createCourseThunk on "CREATE COURSE" button with data-testid="createCourseButton" click ', () => {
+  it('should dispatch createCourseThunk on "CREATE COURSE" button with data-testid="createCourseButton" click', () => {
     render(
       <MemoryRouter>
         <Provider store={store}>

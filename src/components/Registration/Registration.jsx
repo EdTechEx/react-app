@@ -109,7 +109,7 @@ export const Registration = () => {
             placeholderText="Input text"
             error={errors.password}
           />
-          <Button buttonText="register" type="submit" />
+          <Button buttonText="Register" type="submit" />
         </form>
         <p>If you have an account you may {<Link to={"/login"}>Login</Link>}</p>
       </div>

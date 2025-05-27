@@ -1,4 +1,4 @@
-const baseURL = "http://localhost:4000/";
+const baseURL = "http://localhost:4000";
 
 // const API = {
 //   post: async (endpoint, body) => {
@@ -22,7 +22,7 @@ const baseURL = "http://localhost:4000/";
 //   await API.post("register", newUser);
 
 export const createUser = async (data) => {
-  const response = await fetch(`${baseURL}register`, {
+  const response = await fetch(`${baseURL}/register`, {
     method: "POST",
     body: JSON.stringify(data),
     headers: {
@@ -38,7 +38,8 @@ export const createUser = async (data) => {
 };
 
 export const login = async (user) => {
-  const response = await fetch(`${baseURL}login`, {
+  console.log("login service called with user:", user);
+  const response = await fetch(`${baseURL}/login`, {
     method: "POST",
     body: JSON.stringify(user),
     headers: {
@@ -46,17 +47,55 @@ export const login = async (user) => {
     },
   });
 
+  console.log("login fetch response status:", response.status);
+
   if (!response.ok) {
     throw new Error("Network Error");
   }
 
+  const data = await response.json();
+  console.log("login fetch response data:", data);
+  return data;
+};
+
+export const logout = async () => {
+  const response = await fetch(`${baseURL}/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   return await response.json();
 };
 
-export const getCourses = async () => {
-  const response = await fetch(`${baseURL}courses/all`, {
+export const getCurrentUser = async () => {
+  const token = localStorage.getItem("token");
+
+  console.log("Token, який надсилаємо в getCurrentUser:", token);
+
+  if (!token || !token.startsWith("Bearer ")) {
+    throw new Error("Invalid token");
+  }
+
+  const response = await fetch("http://localhost:4000/users/me", {
     method: "GET",
-    body: JSON.stringify(),
+    headers: {
+      Authorization: token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch current user");
+  }
+
+  const data = await response.json();
+  console.log("Дані з /users/me:", data);
+  return data;
+};
+
+export const getCourses = async () => {
+  const response = await fetch(`${baseURL}/courses/all`, {
+    method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
@@ -64,15 +103,70 @@ export const getCourses = async () => {
 
   if (!response.ok) {
     throw new Error("Network Error");
+  }
+
+  return await response.json();
+};
+
+export const updateCourse = async (id, courseData, token) => {
+  const response = await fetch(`${baseURL}/courses/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(courseData),
+  });
+  if (!response.ok) throw new Error("Failed to update course");
+  return await response.json();
+};
+
+export const deleteCourse = async (courseId) => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("No authorization token");
+  }
+
+  const response = await fetch(`${baseURL}/courses/${courseId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete course, status: ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+export const createCourse = async (courseData, token) => {
+  console.log("Course data to send:", courseData);
+  console.log("Token:", token);
+
+  const response = await fetch(`${baseURL}/courses/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token,
+    },
+    body: JSON.stringify(courseData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData?.message || "Failed to create course");
   }
 
   return await response.json();
 };
 
 export const getAuthors = async () => {
-  const response = await fetch(`${baseURL}authors/all`, {
+  const response = await fetch(`${baseURL}/authors/all`, {
     method: "GET",
-    body: JSON.stringify(),
     headers: {
       "Content-Type": "application/json",
     },
@@ -85,32 +179,18 @@ export const getAuthors = async () => {
   return await response.json();
 };
 
-// export const getCurrentUser = async () => {
-//   // write your code here
-//   return await response.json();
-// };
+export const createAuthor = async (authorData) => {
+  const response = await fetch(`${baseURL}/authors/add`, {
+    method: "POST",
+    body: JSON.stringify(authorData),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-// export const updateCourseService = async () => {
-//   // write your code here
-//   return await response.json();
-// };
+  if (!response.ok) {
+    throw new Error("Network Error");
+  }
 
-// export const logout = async () => {
-//   // write your code here
-//   return await response.json();
-// };
-
-// export const deleteCourseService = async () => {
-//   // write your code here
-//   return await response.json();
-// };
-
-// export const createCourse = async () => {
-//   // write your code here
-//   return await response.json();
-// };
-
-// export const createAuthor = async () => {
-//   // write your code here
-//   return await response.json();
-// };
+  return await response.json();
+};

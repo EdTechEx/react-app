@@ -45,6 +45,9 @@ export const Courses = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const role = useSelector((state) => state.user.role);
+  console.log("User role:", role);
+
   useEffect(() => {
     setFilteredCourses(coursesList);
   }, [coursesList]);
@@ -70,9 +73,11 @@ export const Courses = () => {
             setFilteredCourses(filteredCourses)
           }
         />
-        <Link className="link-button" to={"/courses/add"}>
-          Add new course
-        </Link>
+        {role === "admin" && (
+          <Link className="link-button" to={"/courses/add"}>
+            Add new course
+          </Link>
+        )}
       </div>
       <ul className={styles.coursesList}>
         {filteredCourses.map((course) => (

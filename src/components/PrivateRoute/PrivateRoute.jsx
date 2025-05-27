@@ -8,13 +8,19 @@
 // //   ** '/courses/update/:courseId'.
 // // ** TASK DESCRIPTION ** - https://ebook.learn.epam.com/react-fundamentals/docs/module-4/home-task/components#private-route-new-component
 
-// import React from "react";
+import React from "react";
+import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
+import { getUserRoleSelector } from "../../store/selectors.js";
 
-// export const PrivateRoute = () => {
+const PrivateRoute = () => {
+  const role = useSelector(getUserRoleSelector);
 
-// 	//wriet your code here
+  if (role !== "admin") {
+    return <div>Access denied. Admins only.</div>;
+  }
 
-// 	return (
-// 			<p>PrivateRoute</p>//write your code here instead of this 'p' tag
-// 	);
-// };
+  return <Outlet />;
+};
+
+export default PrivateRoute;
