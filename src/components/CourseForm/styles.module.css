@@ -28,10 +28,11 @@ form {
   margin-top: 24px;
 }
 
-.infoWrapper > div {
+.infoWrapper>div {
   width: calc(50% - 20px);
   align-items: center;
 }
+
 .infoWrapper input {
   width: 380px;
 }
@@ -41,7 +42,7 @@ form {
   justify-content: space-between;
 }
 
-.authorsContainer > strong {
+.authorsContainer>strong {
   display: block;
   text-align: center;
   padding-top: 24px;

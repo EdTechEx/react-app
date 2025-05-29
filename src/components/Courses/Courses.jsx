@@ -46,7 +46,6 @@ export const Courses = () => {
   const dispatch = useDispatch();
 
   const role = useSelector((state) => state.user.role);
-  console.log("User role:", role);
 
   useEffect(() => {
     setFilteredCourses(coursesList);
@@ -61,7 +60,14 @@ export const Courses = () => {
   };
 
   if (!filteredCourses.length) {
-    return <EmptyCourseList />;
+    return (
+      <>
+        <EmptyCourseList />
+        <Link data-testid="addCourse" to="/courses/add" className="link-button">
+          Add new course
+        </Link>
+      </>
+    );
   }
 
   return (

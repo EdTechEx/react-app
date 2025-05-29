@@ -47,15 +47,23 @@
 // //   **  CourseForm 'Delete author' button click should delete an author from the course list.
 
 import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 import styles from "./styles.module.css";
 import { Button, Input } from "../../common";
 import { AuthorItem, CreateAuthor } from "./components";
-import { getCourseDuration, getCurrentDate } from "../../helpers";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { getAuthorsSelector } from "../../store/selectors";
-import { createCourseThunk } from "../../store/thunks/coursesThunk";
+import { getCourseDuration } from "../../helpers";
+import {
+  getAuthorsSelector,
+  getCoursesSelector,
+  getUserRoleSelector,
+} from "../../store/selectors";
+import {
+  createCourseThunk,
+  updateCourseThunk,
+  getCoursesThunk,
+} from "../../store/thunks/coursesThunk";
 
 const filterById = (courseAuthors, authors) => {
   const ids = new Set(courseAuthors.map((item) => item.id));
@@ -71,24 +79,81 @@ const courseInitialData = {
 };
 
 export const CourseForm = ({ action }) => {
-  const [courseData, setCourseData] = useState(courseInitialData);
-  const [courseAuthors, setCourseAuthors] = useState([]);
-  const [formError, setFormError] = useState({});
-  const authorsList = useSelector(getAuthorsSelector);
+  const { courseId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [authors, setAuthors] = useState(() =>
-    filterById(courseAuthors, authorsList)
-  );
+  const authorsList = useSelector(getAuthorsSelector);
+  const coursesList = useSelector(getCoursesSelector);
+  const userRole = useSelector(getUserRoleSelector);
+
+  const [courseData, setCourseData] = useState(courseInitialData);
+  const [courseAuthors, setCourseAuthors] = useState([]);
+  const [formError, setFormError] = useState({});
+  const [authors, setAuthors] = useState([]);
+
+  useEffect(() => {
+    if (userRole !== "admin") {
+      navigate("/courses");
+    }
+  }, [userRole, navigate]);
+
+  useEffect(() => {
+    if (!coursesList.length) {
+      dispatch(getCoursesThunk());
+    }
+  }, [coursesList.length, dispatch]);
+
+  useEffect(() => {
+    if (action === "update" && courseId && coursesList.length) {
+      const courseToEdit = coursesList.find((c) => c.id === courseId);
+      if (courseToEdit) {
+        setCourseData({
+          ...courseToEdit,
+          id: courseToEdit.id,
+        });
+
+        const courseAuthorsFull = authorsList.filter((author) =>
+          courseToEdit.authors.includes(author.id)
+        );
+        setCourseAuthors(courseAuthorsFull);
+      }
+    }
+  }, [action, courseId, coursesList, authorsList]);
 
   useEffect(() => {
     setAuthors(filterById(courseAuthors, authorsList));
   }, [authorsList, courseAuthors]);
 
-  const handleCreateCourse = async (e) => {
+  const filterAuthors = (author) => {
+    setCourseAuthors((prevCourseAuthors) => {
+      if (prevCourseAuthors.some((a) => a.id === author.id)) {
+        setAuthors((prevAuthors) => [...prevAuthors, author]);
+        return prevCourseAuthors.filter((a) => a.id !== author.id);
+      } else {
+        setAuthors((prevAuthors) =>
+          prevAuthors.filter((a) => a.id !== author.id)
+        );
+        return [...prevCourseAuthors, author];
+      }
+    });
+  };
+
+  const handleTitleChange = (title) => {
+    setCourseData((data) => ({ ...data, title }));
+  };
+
+  const handleDescriptionChange = (description) => {
+    setCourseData((data) => ({ ...data, description }));
+  };
+
+  const handleDurationChange = (minutes) => {
+    if (isNaN(minutes)) return;
+    setCourseData((data) => ({ ...data, duration: +minutes }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted");
     setFormError({});
 
     let formErrors = {};
@@ -111,67 +176,31 @@ export const CourseForm = ({ action }) => {
       return;
     }
 
-    try {
-      const { id, ...courseWithoutId } = courseData;
-
-      const newCourse = {
-      ...courseWithoutId,
+    const coursePayload = {
+      ...courseData,
       authors: courseAuthors.map((a) => a.id),
     };
 
-      await dispatch(createCourseThunk(newCourse)).unwrap();
+    try {
+      if (action === "create") {
+        await dispatch(createCourseThunk(coursePayload));
+      } else if (action === "update") {
+        await dispatch(
+          updateCourseThunk({ id: courseData.id, data: coursePayload })
+        );
+      }
 
       navigate("/courses");
     } catch (error) {
-      alert(error || "Failed to create course");
+      alert(error.message || "Failed to save course");
     }
   };
-
-  const filterAuthors = (author) => {
-    setCourseAuthors((prevCourseAuthors) => {
-      if (prevCourseAuthors.some((a) => a.id === author.id)) {
-        setAuthors((prevAuthors) => [...prevAuthors, author]);
-
-        return prevCourseAuthors.filter((a) => a.id !== author.id);
-      } else {
-        setAuthors((prevAuthors) =>
-          prevAuthors.filter((a) => a.id !== author.id)
-        );
-
-        return [...prevCourseAuthors, author];
-      }
-    });
-  };
-
-  const handleTitleChange = (title) => {
-    setCourseData((data) => ({ ...data, title }));
-  };
-
-  const handleDescriptionChange = (description) => {
-    setCourseData((data) => ({ ...data, description }));
-  };
-
-  const handleDurationChange = (minutes) => {
-    if (isNaN(minutes)) {
-      return;
-    }
-
-    setCourseData((courseData) => ({
-      ...courseData,
-      duration: +minutes,
-    }));
-  };
-
-  // const onCreateAuthor = (author) => {
-  //   dispatch(saveAuthor(author));
-  // };
 
   return (
     <div className={styles.container}>
-      <h2>{action === "create" ? "Create page" : "Course edit"}</h2>
+      <h2>{action === "create" ? "Create Course" : "Edit Course"}</h2>
 
-      <form onSubmit={handleCreateCourse}>
-        {" "}
+      <form onSubmit={handleSubmit}>
         <Input
           labelText="Title"
           name="title"
@@ -189,7 +218,6 @@ export const CourseForm = ({ action }) => {
             placeholder="Input text"
             onChange={(e) => handleDescriptionChange(e.target.value)}
             value={courseData.description}
-            // error={formError.description}
           />
           {formError.description && (
             <span className={styles.error}>{formError.description}</span>
@@ -200,7 +228,7 @@ export const CourseForm = ({ action }) => {
             <div className={styles.duration}>
               <Input
                 labelText="Duration"
-                name="title"
+                name="duration"
                 onChange={(e) => handleDurationChange(e.target.value)}
                 placeholderText="Input text"
                 data-testid="durationInput"
@@ -209,6 +237,7 @@ export const CourseForm = ({ action }) => {
               />
               <p>{getCourseDuration(courseData.duration)}</p>
             </div>
+
             <h2>Authors</h2>
             <CreateAuthor />
             <div className={styles.authorsContainer}>
@@ -244,12 +273,19 @@ export const CourseForm = ({ action }) => {
             ) : (
               <p className={styles.notification}>List is empty</p>
             )}
+            {formError.authors && (
+              <span className={styles.error}>{formError.authors}</span>
+            )}
           </div>
         </div>
+
         <div className={styles.buttonsContainer}>
-          <Button buttonText="CANCEL" handleClick={() => navigate("/")} />
           <Button
-            buttonText={`${action} course`}
+            buttonText="CANCEL"
+            handleClick={() => navigate("/courses")}
+          />
+          <Button
+            buttonText={action === "create" ? "Create Course" : "Update Course"}
             data-testid="createCourseButton"
             type="submit"
           />

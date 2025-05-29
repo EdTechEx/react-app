@@ -40,7 +40,6 @@ export const Login = () => {
   const token = useSelector(getUserTokenSelector);
 
   useEffect(() => {
-    console.log("Checking token in useEffect:", token);
     if (token) {
       navigate("/courses");
     }
@@ -71,20 +70,16 @@ export const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("handleSubmit called");
 
     const validationErrors = validate();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
-      console.log("Validation failed:", validationErrors);
       return;
     }
 
     try {
-      console.log("Sending login request with data:", formData);
       const response = await login(formData);
-      console.log("Login response:", response);
 
       if (response.errors) {
         const errorObj = {};

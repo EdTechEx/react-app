@@ -1,9 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import {
   setCourses,
-  saveCourse,
   deleteCourse,
-  updateCourse,
 } from "../slices/coursesSlice";
 import {
   getCourses,
@@ -11,22 +9,6 @@ import {
   updateCourse as updateCourseApi,
   deleteCourse as deleteCourseApi,
 } from "../../services.js";
-
-export const updateCourseThunk = createAsyncThunk(
-  "courses/updateCourse",
-  async ({ id, data }, { getState }) => {
-    const token = getState().auth.token;
-    return await updateCourse(id, data, token);
-  }
-);
-
-export const deleteCourseThunk = createAsyncThunk(
-  "courses/deleteCourse",
-  async (courseId, { dispatch }) => {
-    await deleteCourseApi(courseId);
-    dispatch(deleteCourse(courseId));
-  }
-);
 
 export const createCourseThunk = createAsyncThunk(
   "courses/createCourse",
@@ -37,24 +19,36 @@ export const createCourseThunk = createAsyncThunk(
         return thunkAPI.rejectWithValue("No auth token found");
       }
 
-      const hours = Math.floor(newCourseData.duration / 60)
-        .toString()
-        .padStart(2, "0");
-      const minutes = (newCourseData.duration % 60).toString().padStart(2, "0");
-
-      const formattedCourse = {
-        ...newCourseData,
-        duration: `${hours}:${minutes}`,
-        authors: newCourseData.authors,
-      };
-
-      const response = await createCourse(formattedCourse, token);
+      const response = await createCourse(newCourseData, token);
 
       return response.data || response;
     } catch (error) {
       console.error("Error in createCourseThunk:", error);
       return thunkAPI.rejectWithValue(error.message);
     }
+  }
+);
+
+export const updateCourseThunk = createAsyncThunk(
+  "courses/updateCourse",
+  async ({ id, data }) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authorization token found");
+    }
+    const response = await updateCourseApi(id, data, token);
+    if (!response.successful) {
+      throw new Error(response.errors || "Failed to update course");
+    }
+    return response.result;
+  }
+);
+
+export const deleteCourseThunk = createAsyncThunk(
+  "courses/deleteCourse",
+  async (courseId, { dispatch }) => {
+    await deleteCourseApi(courseId);
+    dispatch(deleteCourse(courseId));
   }
 );
 

@@ -1,11 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  isAuth: false,
-  name: "",
-  email: "",
+  isAuth: !!localStorage.getItem("token"),
+  name: localStorage.getItem("name") || "",
+  email: localStorage.getItem("email") || "",
   token: localStorage.getItem("token"),
-  role: null,
+  role: localStorage.getItem("role") || null,
 };
 
 export const userSlice = createSlice({
@@ -21,13 +21,23 @@ export const userSlice = createSlice({
         (payload.email === "admin@email.com" ? "admin" : "user");
       state.isAuth = true;
 
-      if (payload.token) {
-        localStorage.setItem("token", payload.token);
-      }
+      localStorage.setItem("token", payload.token);
+      localStorage.setItem("name", payload.name);
+      localStorage.setItem("email", payload.email);
+      localStorage.setItem("role", state.role);
     },
     removeUserData: () => {
       localStorage.removeItem("token");
-      return initialState;
+      localStorage.removeItem("name");
+      localStorage.removeItem("email");
+      localStorage.removeItem("role");
+      return {
+        isAuth: false,
+        name: "",
+        email: "",
+        token: null,
+        role: null,
+      };
     },
   },
 });

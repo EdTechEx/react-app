@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { setUserData, removeUserData } from "../slices/userSlice";
 import { getCurrentUser } from "../../../src/services";
+import { logout } from "../../../src/services";
 
 export const getUserThunk = createAsyncThunk(
   "user/getUser",
@@ -24,8 +25,10 @@ export const logoutThunk = createAsyncThunk(
   "user/logout",
   async (_, { dispatch }) => {
     try {
+      await logout();
       localStorage.removeItem("token");
       dispatch(removeUserData());
+      return true;
     } catch (error) {
       throw new Error(error.message);
     }

@@ -13,10 +13,7 @@ import React, { useState } from "react";
 import styles from "./styles.module.css";
 import { Button, Input } from "../../../../common";
 import { useDispatch } from "react-redux";
-import { saveAuthor } from "../../../../store/slices/authorsSlice";
-
-const generateId = () =>
-  `author-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+import { createAuthorThunk } from "../../../../store/thunks/authorsThunk";
 
 export const CreateAuthor = () => {
   const [name, setName] = useState("");
@@ -29,12 +26,7 @@ export const CreateAuthor = () => {
       return;
     }
 
-    const newAuthor = {
-      name,
-      id: generateId(),
-    };
-
-    dispatch(saveAuthor(newAuthor));
+    dispatch(createAuthorThunk({ name }));
     setName("");
     setError("");
   };

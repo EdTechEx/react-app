@@ -8,10 +8,7 @@ import {
   getUserNameSelector,
   getUserTokenSelector,
 } from "../../store/selectors";
-import { removeUserData } from "../../store/slices/userSlice";
 import { logoutThunk } from "../../store/thunks/userThunk";
-
-// import { getUserTokenSelector } from "../../store/selectors";
 
 // Module 1:
 // * add Logo and Button components
@@ -48,17 +45,15 @@ export const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    dispatch(logoutThunk()).then(() => {
-      navigate("/login");
-    });
+  const handleClick = async () => {
+    await dispatch(logoutThunk());
+    navigate("/login");
   };
 
   return (
     <div className={styles.headerContainer}>
       <Logo />
       <div className={styles.userContainer}>
-        <p className={styles.userName}>{name}</p>
         <Button
           buttonText={token ? "logout" : "login"}
           handleClick={handleClick}

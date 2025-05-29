@@ -23,9 +23,7 @@
 // * use selectors from store/selectors.js to get coursesList, authorsList from store
 
 import React from "react";
-
 import { formatCreationDate, getCourseDuration } from "../../helpers";
-
 import styles from "./styles.module.css";
 import { Link, useParams } from "react-router-dom";
 import { getAuthorsSelector, getCoursesSelector } from "../../store/selectors";

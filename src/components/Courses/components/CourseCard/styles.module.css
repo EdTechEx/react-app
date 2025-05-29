@@ -17,12 +17,13 @@
 	width: 30%;
 }
 
-.cardDetails > p {
+.cardDetails>p {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	overflow: hidden;
 }
-.cardDetails > p > b {
+
+.cardDetails>p>b {
 	padding-right: 5px;
 }
 

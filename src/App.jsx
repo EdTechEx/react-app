@@ -10,10 +10,6 @@ import {
 } from "./components";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getCourses } from "./services.js";
-import { getAuthors } from "./services";
-import { setCourses } from "./store/slices/coursesSlice";
-import { setAuthors } from "./store/slices/authorsSlice";
 import { getUserTokenSelector } from "./store/selectors.js";
 import { getAuthorsThunk } from "./store/thunks/authorsThunk";
 import { getCoursesThunk } from "./store/thunks/coursesThunk";
@@ -53,39 +49,23 @@ function App() {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  // const fetchInitData = async () => {
-  //   const courses = await getCourses();
-  //   const authors = await getAuthors();
-
-  //   dispatch(setCourses(courses.result));
-  //   dispatch(setAuthors(authors.result));
-  // };
-
   useEffect(() => {
-    console.log("Поточний шлях:", location.pathname);
-    console.log("Token у useEffect навігації:", token);
-
     if (
       !token &&
       location.pathname !== "/login" &&
       location.pathname !== "/registration"
     ) {
-      console.log('Перенаправлення на /login');
       navigate("/login");
     }
     if (token && location.pathname === "/") {
-      console.log('Перенаправлення на /courses');
       navigate("/courses");
     }
   }, [location.pathname, navigate, token]);
 
   useEffect(() => {
     if (!token) {
-      console.log("Token відсутній у useEffect");
       return;
     }
-
-    console.log("Token наявний у useEffect:", token);
 
     dispatch(getCoursesThunk());
     dispatch(getAuthorsThunk());
@@ -106,11 +86,11 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route
               path="courses/add"
-              element={<CourseForm action="Create" />}
+              element={<CourseForm action="create" />}
             />
             <Route
               path="courses/update/:courseId"
-              element={<CourseForm action="Update" />}
+              element={<CourseForm action="update" />}
             />
           </Route>
         </Routes>
